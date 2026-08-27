@@ -1,4 +1,4 @@
-// Shared formatting utilities and constants for the SnowBolt Trade Promo app
+// Shared formatting utilities and constants for the Ceres Trade Promo app
 
 export function formatIDR(val: number): string {
   return new Intl.NumberFormat("id-ID", {
@@ -22,7 +22,7 @@ export function formatPercent(val: number, decimals = 1): string {
 
 // Chart color palette (matches globals.css chart-1 through chart-5)
 export const CHART_COLORS = [
-  "oklch(0.62 0.16 245)",  // chart-1: SnowBolt blue
+  "oklch(0.62 0.16 245)",  // chart-1: Ceres blue
   "oklch(0.50 0.14 260)",  // chart-2: navy
   "oklch(0.75 0.15 85)",   // chart-3: gold
   "oklch(0.65 0.12 180)",  // chart-4: teal
@@ -63,14 +63,14 @@ export const promoTypeColorMap: Record<string, string> = {
 
 // Compliance status → badge Tailwind classes
 export const statusBadgeClass: Record<string, string> = {
-  COMPLIANT: "bg-snowbolt-dark/15 text-snowbolt-dark dark:bg-snowbolt-dark/30 dark:text-blue-200",
+  COMPLIANT: "bg-ceres-dark/15 text-ceres-dark dark:bg-ceres-dark/30 dark:text-blue-200",
   PARTIAL: "bg-orange-100 text-orange-800 dark:bg-orange-900/40 dark:text-orange-200",
-  "NON-COMPLIANT": "bg-snowbolt-blue/15 text-snowbolt-blue dark:bg-snowbolt-blue/30 dark:text-red-200",
+  "NON-COMPLIANT": "bg-ceres-blue/15 text-ceres-blue dark:bg-ceres-blue/30 dark:text-red-200",
 };
 
-// Compliance status → HSL color for charts (SnowBolt palette)
+// Compliance status → HSL color for charts (Ceres palette)
 export const statusColors: Record<string, string> = {
-  COMPLIANT: "oklch(0.25 0.06 260)",       // SnowBolt Dark
+  COMPLIANT: "oklch(0.25 0.06 260)",       // Ceres Dark
   PARTIAL: "oklch(0.65 0.18 55)",           // Warm orange
-  "NON-COMPLIANT": "oklch(0.55 0.22 25)",  // SnowBolt Blue
+  "NON-COMPLIANT": "oklch(0.55 0.22 25)",  // Ceres Blue
 };

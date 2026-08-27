@@ -46,7 +46,7 @@ interface ChatMessage {
   timestamp: string; // ISO string for serialization
 }
 
-const STORAGE_KEY = "snowbolt-chat-history";
+const STORAGE_KEY = "ceres-chat-history";
 
 function loadChatHistory(): ChatMessage[] {
   if (typeof window === "undefined") return [];
@@ -63,7 +63,7 @@ function loadChatHistory(): ChatMessage[] {
     {
       role: "assistant",
       content:
-        "Hello! I can help you analyze your trade promotion data. Ask me anything about promotions, compliance, volume lifts, or ROI across your SnowBolt Energy Indonesia portfolio.\n\nTry one of the suggested prompts below, or type your own question.",
+        "Hello! I can help you analyze your trade promotion data. Ask me anything about promotions, compliance, volume lifts, or ROI across your Ceres Indonesia portfolio.\n\nTry one of the suggested prompts below, or type your own question.",
       timestamp: new Date().toISOString(),
     },
   ];
@@ -89,7 +89,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
   // Initialize dark mode from localStorage
   useEffect(() => {
-    const stored = localStorage.getItem("snowbolt-dark-mode");
+    const stored = localStorage.getItem("ceres-dark-mode");
     if (stored === "true") {
       setDarkMode(true);
       document.documentElement.classList.add("dark");
@@ -101,10 +101,10 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     setDarkMode(next);
     if (next) {
       document.documentElement.classList.add("dark");
-      localStorage.setItem("snowbolt-dark-mode", "true");
+      localStorage.setItem("ceres-dark-mode", "true");
     } else {
       document.documentElement.classList.remove("dark");
-      localStorage.setItem("snowbolt-dark-mode", "false");
+      localStorage.setItem("ceres-dark-mode", "false");
     }
   }
 
@@ -198,21 +198,21 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       <header className={cn(
         "flex h-[72px] shrink-0 items-center justify-between border-b px-6 transition-all duration-200",
         scrolled
-          ? "bg-snowbolt-dark/90 glass shadow-z8"
-          : "bg-snowbolt-dark"
+          ? "bg-ceres-dark/90 glass shadow-z8"
+          : "bg-ceres-dark"
       )}>
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-2">
             <img
-              src="/snowbolt-logo.svg"
-              alt="SnowBolt Energy"
+              src="/ceres-logo.svg"
+              alt="Ceres Indonesia"
               className="h-7"
             />
             <div className="flex flex-col">
               <span className="text-sm font-bold leading-none text-white">
                 Trade Promotions
               </span>
-              <span className="text-[10px] leading-none text-snowbolt-silver">
+              <span className="text-[10px] leading-none text-ceres-silver">
                 Post-Event Analysis | Indonesia
               </span>
             </div>
@@ -240,7 +240,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                     className={cn(
                       "h-5 w-5 justify-center rounded-full border p-0 text-[10px]",
                       isActive
-                        ? "border-snowbolt-blue bg-snowbolt-blue text-white"
+                        ? "border-ceres-blue bg-ceres-blue text-white"
                         : "border-white/30 text-white/60"
                     )}
                   >
@@ -285,7 +285,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             {/* Chat header */}
             <div className="flex items-center justify-between border-b px-4 py-3 glass bg-card/80">
               <div className="flex items-center gap-2">
-                <MessageSquare className="h-4 w-4 text-snowbolt-blue" />
+                <MessageSquare className="h-4 w-4 text-ceres-blue" />
                 <span className="text-sm font-semibold">AI Assistant</span>
                 <Badge variant="secondary" className="text-[9px]">
                   Cortex LLM
@@ -327,7 +327,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                       className={cn(
                         "max-w-[90%] rounded-xl px-3 py-2 text-sm whitespace-pre-wrap",
                         msg.role === "user"
-                          ? "bg-snowbolt-dark text-white"
+                          ? "bg-ceres-dark text-white"
                           : "bg-muted text-foreground"
                       )}
                     >
@@ -364,7 +364,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             {chatMessages.length <= 2 && !chatLoading && (
               <div className="border-t border-dashed px-4 py-3">
                 <div className="flex items-center gap-1.5 mb-2">
-                  <Sparkles className="h-3 w-3 text-snowbolt-cyan" />
+                  <Sparkles className="h-3 w-3 text-ceres-cyan" />
                   <span className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">
                     Suggested
                   </span>
@@ -398,7 +398,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               <Button
                 type="submit"
                 size="icon"
-                className="h-9 w-9 shrink-0 bg-snowbolt-blue hover:bg-snowbolt-blue/90"
+                className="h-9 w-9 shrink-0 bg-ceres-blue hover:bg-ceres-blue/90"
                 disabled={!chatInput.trim() || chatLoading}
               >
                 <Send className="h-4 w-4" />
@@ -415,7 +415,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           "fixed bottom-6 right-6 z-50 flex h-14 w-14 items-center justify-center rounded-full shadow-lg transition-all hover:scale-105",
           chatOpen
             ? "bg-white/15 text-white backdrop-blur-sm"
-            : "bg-snowbolt-blue text-white hover:bg-snowbolt-blue/90"
+            : "bg-ceres-blue text-white hover:bg-ceres-blue/90"
         )}
         title="Ask AI"
       >
