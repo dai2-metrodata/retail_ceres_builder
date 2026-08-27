@@ -1,0 +1,19 @@
+spec:
+  containers:
+    - name: ceres-trade-promo
+      image: /CERES_TRADE_PROMO/TRADE_ANALYTICS/IMAGE_REPO/ceres-trade-promo:latest
+      env:
+        SNOWFLAKE_WAREHOUSE: COMPUTE_WH
+        SNOWFLAKE_DATABASE: CERES_TRADE_PROMO
+        SNOWFLAKE_SCHEMA: TRADE_ANALYTICS
+      resources:
+        requests:
+          cpu: 0.5
+          memory: 1Gi
+        limits:
+          cpu: 2
+          memory: 4Gi
+  endpoints:
+    - name: app
+      port: 8000
+      public: true

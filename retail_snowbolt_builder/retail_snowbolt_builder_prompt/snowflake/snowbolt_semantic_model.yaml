@@ -1,0 +1,798 @@
+name: ceres_trade_promotions
+description: >
+  Trade promotion analytics for Ceres Indonesia.
+  Covers all promotional calendar events, retail execution compliance,
+  volume lift, ROI, and point-of-sale actuals across 10 Indonesian retail chains.
+  Currency is Indonesian Rupiah (IDR). Time grain is weekly.
+
+tables:
+  - name: FACT_TRADE_CALENDAR
+    description: >
+      One row per promotional event. Contains the planned mechanics, spend, volume,
+      and discount for every retailer-PPG combination that ran a promotion.
+      Join to FACT_LIFT_ANALYSIS and FACT_COMPLIANCE_SCORES via PROMO_ID.
+    base_table:
+      database: CERES_TRADE_PROMO
+      schema: TRADE_ANALYTICS
+      table: FACT_TRADE_CALENDAR
+    primary_key:
+      columns:
+        - PROMO_ID
+    dimensions:
+      - name: promo_id
+        description: Unique identifier for each promotional event.
+        expr: PROMO_ID
+        data_type: NUMBER
+        unique: true
+      - name: retailer_id
+        description: Foreign key to DIM_RETAILER.
+        expr: RETAILER_ID
+        data_type: NUMBER
+      - name: ppg_id
+        description: Foreign key to DIM_PPG.
+        expr: PPG_ID
+        data_type: NUMBER
+      - name: promo_type
+        description: >
+          Promotion mechanic type. Values: TPR (price reduction only),
+          TPR+D (price + secondary display), TPR+F (price + feature/flyer),
+          TPR+D+F (price + display + feature — the most complete mechanic).
+        expr: PROMO_TYPE
+        data_type: VARCHAR
+        synonyms:
+          - promotion type
+          - mechanic
+          - promotion mechanic
+          - trade mechanic
+      - name: coverage
+        description: >
+          Distribution coverage of the promotion: NATIONAL, REGIONAL, or LOCAL.
+        expr: COVERAGE
+        data_type: VARCHAR
+        synonyms:
+          - distribution
+          - national vs regional
+      - name: planned_has_display
+        description: Whether a secondary in-store display was planned for this promotion.
+        expr: PLANNED_HAS_DISPLAY
+        data_type: BOOLEAN
+        synonyms:
+          - has display
+          - display planned
+          - secondary display
+      - name: planned_has_feature
+        description: Whether a flyer/digital feature was planned for this promotion.
+        expr: PLANNED_HAS_FEATURE
+        data_type: BOOLEAN
+        synonyms:
+          - has feature
+          - feature planned
+          - flyer
+      - name: status
+        description: Promotion status. COMPLETED means the promo period has ended; PLANNED means it is upcoming.
+        expr: STATUS
+        data_type: VARCHAR
+      - name: week_start
+        description: First day (Monday) of the promotional week.
+        expr: WEEK_START
+        data_type: DATE
+        synonyms:
+          - promo start
+          - start date
+          - promotion start week
+      - name: week_end
+        description: Last day of the promotional week or multi-week promo.
+        expr: WEEK_END
+        data_type: DATE
+        synonyms:
+          - promo end
+          - end date
+    metrics:
+      - name: total_promotions
+        description: Total number of promotional events.
+        expr: COUNT(PROMO_ID)
+        synonyms:
+          - number of promos
+          - promo count
+          - how many promotions
+      - name: total_planned_spend_idr
+        description: Total planned trade spend in Indonesian Rupiah across all promotions.
+        expr: SUM(PLANNED_SPEND_IDR)
+        synonyms:
+          - planned budget
+          - trade budget
+          - total spend
+          - planned spend
+          - promotion cost
+      - name: avg_discount_pct
+        description: Average percentage discount depth across promotions.
+        expr: AVG(DISCOUNT_PCT)
+        synonyms:
+          - average discount
+          - average discount depth
+          - discount rate
+      - name: total_planned_volume_cases
+        description: Total planned promotional volume in cases.
+        expr: SUM(PLANNED_VOLUME_CASES)
+        synonyms:
+          - planned volume
+          - expected volume
+      - name: retailer_count
+        description: Count of distinct retailers with promotional events. Measures breadth of retail network coverage.
+        expr: COUNT(DISTINCT retailer_id)
+        synonyms:
+          - number of retailers
+          - how many retailers
+      - name: ppg_count
+        description: Count of distinct PPGs (product groups) promoted. Measures breadth of the promoted product portfolio.
+        expr: COUNT(DISTINCT ppg_id)
+        synonyms:
+          - number of products promoted
+          - how many products promoted
+          - PPGs promoted
+
+  - name: FACT_LIFT_ANALYSIS
+    description: >
+      One row per promotion. Contains the actual spend, incremental volume,
+      incremental revenue, lift percentage, and ROI for each promotional event.
+      This is the primary table for measuring promotional return on investment.
+    base_table:
+      database: CERES_TRADE_PROMO
+      schema: TRADE_ANALYTICS
+      table: FACT_LIFT_ANALYSIS
+    primary_key:
+      columns:
+        - PROMO_ID
+    dimensions:
+      - name: lift_id
+        description: Unique identifier for each lift analysis record.
+        expr: LIFT_ID
+        data_type: NUMBER
+        unique: true
+      - name: promo_id
+        description: Foreign key to FACT_TRADE_CALENDAR.
+        expr: PROMO_ID
+        data_type: NUMBER
+    metrics:
+      - name: total_actual_spend_idr
+        description: Total actual trade spend in IDR (may differ from planned spend due to execution variance).
+        expr: SUM(SPEND_IDR)
+        synonyms:
+          - actual spend
+          - total spend
+          - real spend
+          - money spent
+      - name: total_incremental_revenue_idr
+        description: >
+          Total incremental revenue in IDR generated above the baseline during promotion periods.
+          This is the revenue directly attributable to the promotion.
+        expr: SUM(INCREMENTAL_REVENUE_IDR)
+        synonyms:
+          - incremental revenue
+          - revenue generated
+          - promo revenue
+          - revenue from promotions
+      - name: total_base_volume_cases
+        description: Total baseline volume in cases (what would have sold without the promotion).
+        expr: SUM(BASE_VOLUME_CASES)
+        synonyms:
+          - baseline volume
+          - base volume
+          - non-promoted volume
+      - name: total_incremental_volume_cases
+        description: Total incremental volume in cases generated by the promotion above baseline.
+        expr: SUM(INCREMENTAL_VOLUME_CASES)
+        synonyms:
+          - incremental volume
+          - uplift volume
+          - additional volume
+      - name: total_promoted_volume_cases
+        description: Total volume sold during the promotion period (base + incremental).
+        expr: SUM(TOTAL_PROMOTED_VOLUME_CASES)
+        synonyms:
+          - promoted volume
+          - total volume
+      - name: avg_lift_pct
+        description: Average volume lift percentage (incremental / base * 100) across promotions.
+        expr: AVG(LIFT_PCT)
+        synonyms:
+          - average lift
+          - lift rate
+          - average uplift
+          - volume uplift percentage
+      - name: avg_roi
+        description: >
+          Average return on investment per promotion (incremental revenue / spend).
+          A value above 1.0 means the promotion is profitable.
+          A value below 1.0 means the promotion cost more than it returned.
+        expr: AVG(ROI)
+        synonyms:
+          - average ROI
+          - return on investment
+          - promo efficiency
+          - promotional return
+      - name: overall_roi
+        description: >
+          Portfolio-level ROI: total incremental revenue divided by total spend.
+          Use this to measure whether the entire trade budget was profitable.
+        expr: SUM(INCREMENTAL_REVENUE_IDR) / NULLIF(SUM(SPEND_IDR), 0)
+      - name: total_spend_billion_idr
+        description: Total actual trade spend in IDR expressed in billions. Use for executive-level quarterly and annual comparisons.
+        expr: SUM(spend_idr) / 1e9
+        synonyms:
+          - spend in billions
+          - trade budget billions
+      - name: total_incremental_revenue_billion_idr
+        description: Total incremental revenue above baseline during promotions, in billions IDR. Use for portfolio-level revenue reporting.
+        expr: SUM(incremental_revenue_idr) / 1e9
+        synonyms:
+          - revenue in billions
+          - incremental revenue billions
+      - name: total_spend_million_idr
+        description: Total actual trade spend in IDR expressed in millions. Use when comparing spend across retailers, channels, or promo types.
+        expr: SUM(spend_idr) / 1e6
+        synonyms:
+          - spend in millions
+          - trade spend millions
+      - name: total_incremental_revenue_million_idr
+        description: Total incremental revenue above baseline, in millions IDR. Pair with spend_million to compute segment-level ROI.
+        expr: SUM(incremental_revenue_idr) / 1e6
+        synonyms:
+          - revenue in millions
+          - promo revenue millions
+        synonyms:
+          - portfolio ROI
+          - total ROI
+          - blended ROI
+          - is promotion worth it
+
+
+    facts:
+      - name: is_roi_positive
+        description: >
+          Binary flag (1/0): 1 when the promotion generated ROI >= 1.0 (profitable).
+          Sum or average to calculate share of promotions that paid back.
+        expr: CASE WHEN roi >= 1 THEN 1 ELSE 0 END
+        data_type: NUMBER
+
+  - name: FACT_COMPLIANCE_SCORES
+    description: >
+      One row per promotion. Measures how well the retailer executed the planned promotion:
+      price accuracy (was the correct shelf price applied?), display compliance
+      (was the secondary display set up?), and feature compliance (was the flyer/digital
+      feature activated?). Overall score is the average of the three components.
+    base_table:
+      database: CERES_TRADE_PROMO
+      schema: TRADE_ANALYTICS
+      table: FACT_COMPLIANCE_SCORES
+    primary_key:
+      columns:
+        - PROMO_ID
+    dimensions:
+      - name: compliance_id
+        description: Unique identifier for each compliance record.
+        expr: COMPLIANCE_ID
+        data_type: NUMBER
+        unique: true
+      - name: promo_id
+        description: Foreign key to FACT_TRADE_CALENDAR.
+        expr: PROMO_ID
+        data_type: NUMBER
+      - name: compliance_status
+        description: >
+          Overall execution grade. COMPLIANT = overall score >= 85%,
+          PARTIAL = 60–84%, NON-COMPLIANT = below 60%.
+        expr: COMPLIANCE_STATUS
+        data_type: VARCHAR
+        synonyms:
+          - execution status
+          - compliance grade
+          - execution result
+    metrics:
+      - name: avg_overall_compliance
+        description: Average overall compliance score across all promotions (0–100%).
+        expr: AVG(OVERALL_COMPLIANCE_PCT)
+        synonyms:
+          - average compliance
+          - overall compliance score
+          - compliance rate
+          - execution score
+      - name: avg_price_accuracy
+        description: Average price accuracy score (was the correct promotional price applied at shelf?).
+        expr: AVG(PRICE_ACCURACY_PCT)
+        synonyms:
+          - price accuracy
+          - price compliance
+          - shelf price accuracy
+      - name: avg_display_compliance
+        description: Average display compliance score (was the secondary display placed as planned?).
+        expr: AVG(DISPLAY_COMPLIANCE_PCT)
+        synonyms:
+          - display compliance
+          - secondary display score
+          - display execution
+      - name: avg_feature_compliance
+        description: Average feature compliance score (was the flyer or digital feature activated?).
+        expr: AVG(FEATURE_COMPLIANCE_PCT)
+        synonyms:
+          - feature compliance
+          - flyer compliance
+          - feature execution
+      - name: compliant_count
+        description: Number of promotions with COMPLIANT status (overall score >= 85%). How many promotions were fully executed.
+        expr: SUM(CASE WHEN compliance_status = 'COMPLIANT' THEN 1 ELSE 0 END)
+        synonyms:
+          - fully compliant promotions
+          - compliant promotions
+      - name: noncompliant_count
+        description: Number of promotions with NON-COMPLIANT status (score < 60%). Measures the scale of execution failures.
+        expr: SUM(CASE WHEN compliance_status = 'NON-COMPLIANT' THEN 1 ELSE 0 END)
+        synonyms:
+          - failed promotions
+          - non-compliant promotions
+      - name: partial_count
+        description: Number of promotions with PARTIAL status (score 60-84%). Incomplete but not failed executions.
+        expr: SUM(CASE WHEN compliance_status = 'PARTIAL' THEN 1 ELSE 0 END)
+        synonyms:
+          - partially compliant
+          - partial compliance
+
+
+    facts:
+      - name: is_compliant
+        description: Flag (1/0) indicating this promotion achieved COMPLIANT status (score >= 85%).
+        expr: CASE WHEN compliance_status = 'COMPLIANT' THEN 1 ELSE 0 END
+        data_type: NUMBER
+      - name: is_noncompliant
+        description: Flag (1/0) indicating this promotion received NON-COMPLIANT status (score < 60%).
+        expr: CASE WHEN compliance_status = 'NON-COMPLIANT' THEN 1 ELSE 0 END
+        data_type: NUMBER
+      - name: is_partial_compliant
+        description: Flag (1/0) indicating this promotion received PARTIAL status (score 60-84%).
+        expr: CASE WHEN compliance_status = 'PARTIAL' THEN 1 ELSE 0 END
+        data_type: NUMBER
+
+  - name: FACT_POS_ACTUALS
+    description: >
+      Weekly point-of-sale actuals. One row per retailer-PPG-week combination.
+      Records the actual shelf price, actual volume sold, and whether the product
+      was on promotion, display, or feature that week.
+    base_table:
+      database: CERES_TRADE_PROMO
+      schema: TRADE_ANALYTICS
+      table: FACT_POS_ACTUALS
+    primary_key:
+      columns:
+        - POS_ID
+    dimensions:
+      - name: pos_id
+        description: Unique identifier for each POS actuals record.
+        expr: POS_ID
+        data_type: NUMBER
+        unique: true
+      - name: week_id
+        description: Foreign key to DIM_CALENDAR.
+        expr: WEEK_ID
+        data_type: NUMBER
+      - name: retailer_id
+        description: Foreign key to DIM_RETAILER.
+        expr: RETAILER_ID
+        data_type: NUMBER
+      - name: ppg_id
+        description: Foreign key to DIM_PPG.
+        expr: PPG_ID
+        data_type: NUMBER
+      - name: is_on_feature
+        description: Whether the product was featured in retailer marketing material that week.
+        expr: IS_ON_FEATURE
+        data_type: BOOLEAN
+      - name: is_on_display
+        description: Whether the product had a secondary display in store that week.
+        expr: IS_ON_DISPLAY
+        data_type: BOOLEAN
+      - name: is_promoted
+        description: Whether the product was on any form of promotion that week.
+        expr: IS_PROMOTED
+        data_type: BOOLEAN
+    metrics:
+      - name: total_actual_volume_cases
+        description: Total actual volume sold in cases.
+        expr: SUM(ACTUAL_VOLUME_CASES)
+        synonyms:
+          - total volume
+          - units sold
+          - cases sold
+          - actual sales volume
+      - name: avg_actual_price_idr
+        description: Average actual shelf price in IDR.
+        expr: AVG(ACTUAL_PRICE_IDR)
+        synonyms:
+          - average price
+          - shelf price
+          - actual price
+      - name: total_pos_weeks
+        description: Total number of retailer-PPG-week observations.
+        expr: COUNT(POS_ID)
+      - name: promoted_weeks
+        description: Count of retailer-PPG-week observations where the product was on promotion. Measures promotion frequency.
+        expr: SUM(CASE WHEN is_promoted THEN 1 ELSE 0 END)
+        synonyms:
+          - weeks on promotion
+          - promotion frequency
+
+
+    facts:
+      - name: is_promoted_flag
+        description: Flag (1/0) indicating the product was on any promotion that week. Average to get share of weeks promoted.
+        expr: CASE WHEN is_promoted THEN 1 ELSE 0 END
+        data_type: NUMBER
+
+  - name: DIM_RETAILER
+    description: >
+      Dimension table for retail chain partners in Indonesia.
+      Includes channel classification (Modern Trade, Minimarket, etc.)
+      and store count for context on scale.
+    base_table:
+      database: CERES_TRADE_PROMO
+      schema: TRADE_ANALYTICS
+      table: DIM_RETAILER
+    primary_key:
+      columns:
+        - RETAILER_ID
+    dimensions:
+      - name: retailer_id
+        description: Unique identifier for each retail chain.
+        expr: RETAILER_ID
+        data_type: NUMBER
+        unique: true
+      - name: retailer_name
+        description: Name of the retail chain (e.g. Indomaret, Carrefour Indonesia, Lotte Mart).
+        expr: RETAILER_NAME
+        data_type: VARCHAR
+        synonyms:
+          - retailer
+          - store
+          - chain
+          - retail partner
+          - account
+      - name: country
+        description: Country where the retailer operates.
+        expr: COUNTRY
+        data_type: VARCHAR
+      - name: channel
+        description: >
+          Retail channel classification: Modern Trade (hypermarkets, supermarkets),
+          Minimarket (Indomaret, Alfamart), or Specialty.
+        expr: CHANNEL
+        data_type: VARCHAR
+        synonyms:
+          - channel type
+          - store type
+          - retail channel
+          - trade channel
+      - name: coverage_type
+        description: Geographic coverage type of the retailer — NATIONAL, REGIONAL, or LOCAL.
+        expr: COVERAGE_TYPE
+        data_type: VARCHAR
+    metrics:
+      - name: store_count
+        description: Total number of stores the retailer operates.
+        expr: SUM(STORE_COUNT)
+        synonyms:
+          - number of stores
+          - store footprint
+
+  - name: DIM_PPG
+    description: >
+      Price-Pack Group (PPG) dimension. Each row is a distinct product-pack size
+      combination for the Ceres Meses chocolate sprinkles line. PPGs span pack sizes
+      from 20g mini sachets to 2kg family packs, across regular flavour variants
+      (Milk, Dark, White, Rainbow, Strawberry) and limited-edition variants
+      (Tiramisu, Matcha, Ramadan/Lebaran/Christmas editions).
+    base_table:
+      database: CERES_TRADE_PROMO
+      schema: TRADE_ANALYTICS
+      table: DIM_PPG
+    primary_key:
+      columns:
+        - PPG_ID
+    dimensions:
+      - name: ppg_id
+        description: Unique identifier for each price-pack group.
+        expr: PPG_ID
+        data_type: NUMBER
+        unique: true
+      - name: ppg_name
+        description: >
+          Product name, e.g. Ceres Meses Milk Choco 200g, Ceres Meses Dark Choco 1kg,
+          Ceres Meses Rainbow 80g, Ceres Meses Lebaran Gift Box 400g.
+        expr: PPG_NAME
+        data_type: VARCHAR
+        synonyms:
+          - product
+          - SKU
+          - product name
+          - brand variant
+      - name: pack_size
+        description: >
+          Package weight: 20g, 40g, 80g, 200g, 400g, 1kg, or 2kg.
+          40g and 80g are the most common sizes in promotion; 1kg/2kg are family packs.
+        expr: PACK_SIZE
+        data_type: VARCHAR
+        synonyms:
+          - pack
+          - size
+          - packaging
+          - weight
+      - name: product_variant
+        description: >
+          Flavour/product variant, e.g. Milk Chocolate, Dark Chocolate, White Chocolate,
+          Rainbow Mix, Tiramisu, Matcha, Strawberry, or Assorted (gift box editions).
+        expr: PRODUCT_VARIANT
+        data_type: VARCHAR
+        synonyms:
+          - variant
+          - flavour
+          - flavor
+          - flavour variant
+      - name: category
+        description: >
+          Product category. All PPGs in this dataset are Chocolate Sprinkles
+          (meses); use product_variant and is_limited_edition to further segment
+          regular flavours vs. seasonal/limited editions.
+        expr: CATEGORY
+        data_type: VARCHAR
+        synonyms:
+          - product tier
+          - tier
+          - product category
+          - product line
+      - name: is_limited_edition
+        description: >
+          Whether the product is a limited/seasonal edition (e.g. Tiramisu, Matcha,
+          Ramadan, Lebaran, Christmas editions) rather than a regular everyday flavour.
+        expr: IS_LIMITED_EDITION
+        data_type: BOOLEAN
+        synonyms:
+          - limited edition
+          - seasonal
+          - special edition
+    metrics:
+      - name: regular_price_idr
+        description: Standard shelf price in IDR before any promotional discount.
+        expr: AVG(REGULAR_PRICE_IDR)
+        synonyms:
+          - regular price
+          - standard price
+          - base price
+          - shelf price
+
+  - name: DIM_CALENDAR
+    description: >
+      Weekly calendar dimension covering W01 2025 through W78 (end of June 2026).
+      Each row represents one ISO week. Use YEAR and QUARTER to filter by time period.
+    base_table:
+      database: CERES_TRADE_PROMO
+      schema: TRADE_ANALYTICS
+      table: DIM_CALENDAR
+    primary_key:
+      columns:
+        - WEEK_ID
+    dimensions:
+      - name: week_id
+        description: Sequential week identifier (1 = first week of 2025).
+        expr: WEEK_ID
+        data_type: NUMBER
+        unique: true
+      - name: week_start
+        description: First day of the week (Monday).
+        expr: WEEK_START
+        data_type: DATE
+        synonyms:
+          - week beginning
+          - start of week
+      - name: week_end
+        description: Last day of the week (Sunday).
+        expr: WEEK_END
+        data_type: DATE
+      - name: year
+        description: Calendar year (2025 or 2026).
+        expr: YEAR
+        data_type: NUMBER
+        synonyms:
+          - annual
+          - fiscal year
+      - name: quarter
+        description: Calendar quarter (1–4). Q1 = Jan–Mar, Q2 = Apr–Jun, Q3 = Jul–Sep, Q4 = Oct–Dec.
+        expr: QUARTER
+        data_type: NUMBER
+        synonyms:
+          - Q1
+          - Q2
+          - Q3
+          - Q4
+          - quarterly
+      - name: month
+        description: Month number (1–12).
+        expr: MONTH
+        data_type: NUMBER
+        synonyms:
+          - monthly
+      - name: period_name
+        description: Week label (e.g. W01, W26, W52).
+        expr: PERIOD_NAME
+        data_type: VARCHAR
+        synonyms:
+          - week label
+          - week name
+          - period
+
+relationships:
+  - name: promo_to_lift
+    left_table: FACT_TRADE_CALENDAR
+    right_table: FACT_LIFT_ANALYSIS
+    relationship_columns:
+      - left_column: PROMO_ID
+        right_column: PROMO_ID
+
+  - name: promo_to_compliance
+    left_table: FACT_TRADE_CALENDAR
+    right_table: FACT_COMPLIANCE_SCORES
+    relationship_columns:
+      - left_column: PROMO_ID
+        right_column: PROMO_ID
+
+  - name: promo_to_retailer
+    left_table: FACT_TRADE_CALENDAR
+    right_table: DIM_RETAILER
+    relationship_columns:
+      - left_column: RETAILER_ID
+        right_column: RETAILER_ID
+
+  - name: promo_to_ppg
+    left_table: FACT_TRADE_CALENDAR
+    right_table: DIM_PPG
+    relationship_columns:
+      - left_column: PPG_ID
+        right_column: PPG_ID
+
+  - name: pos_to_retailer
+    left_table: FACT_POS_ACTUALS
+    right_table: DIM_RETAILER
+    relationship_columns:
+      - left_column: RETAILER_ID
+        right_column: RETAILER_ID
+
+  - name: pos_to_ppg
+    left_table: FACT_POS_ACTUALS
+    right_table: DIM_PPG
+    relationship_columns:
+      - left_column: PPG_ID
+        right_column: PPG_ID
+
+  - name: pos_to_calendar
+    left_table: FACT_POS_ACTUALS
+    right_table: DIM_CALENDAR
+    relationship_columns:
+      - left_column: WEEK_ID
+        right_column: WEEK_ID
+
+verified_queries:
+  - name: total_spend_and_revenue_by_quarter
+    question: What is the total trade spend and incremental revenue by quarter?
+    sql: |
+      SELECT
+        cal.YEAR,
+        cal.QUARTER,
+        ROUND(SUM(la.SPEND_IDR) / 1e9, 2)               AS total_spend_billion_idr,
+        ROUND(SUM(la.INCREMENTAL_REVENUE_IDR) / 1e9, 2) AS total_revenue_billion_idr,
+        ROUND(SUM(la.INCREMENTAL_REVENUE_IDR) / NULLIF(SUM(la.SPEND_IDR), 0), 2) AS overall_roi
+      FROM CERES_TRADE_PROMO.TRADE_ANALYTICS.FACT_TRADE_CALENDAR tc
+      JOIN CERES_TRADE_PROMO.TRADE_ANALYTICS.FACT_LIFT_ANALYSIS la ON tc.PROMO_ID = la.PROMO_ID
+      JOIN CERES_TRADE_PROMO.TRADE_ANALYTICS.DIM_CALENDAR cal ON tc.WEEK_START = cal.WEEK_START
+      GROUP BY cal.YEAR, cal.QUARTER
+      ORDER BY cal.YEAR, cal.QUARTER
+
+  - name: top_retailers_by_roi
+    question: Which retailers have the highest average ROI?
+    sql: |
+      SELECT
+        r.RETAILER_NAME,
+        COUNT(tc.PROMO_ID)                                                         AS total_promos,
+        ROUND(SUM(la.SPEND_IDR) / 1e6, 1)                                         AS spend_million_idr,
+        ROUND(SUM(la.INCREMENTAL_REVENUE_IDR) / 1e6, 1)                           AS revenue_million_idr,
+        ROUND(SUM(la.INCREMENTAL_REVENUE_IDR) / NULLIF(SUM(la.SPEND_IDR), 0), 2)  AS overall_roi,
+        ROUND(AVG(la.ROI), 2)                                                      AS avg_roi
+      FROM CERES_TRADE_PROMO.TRADE_ANALYTICS.FACT_TRADE_CALENDAR tc
+      JOIN CERES_TRADE_PROMO.TRADE_ANALYTICS.FACT_LIFT_ANALYSIS la ON tc.PROMO_ID = la.PROMO_ID
+      JOIN CERES_TRADE_PROMO.TRADE_ANALYTICS.DIM_RETAILER r ON tc.RETAILER_ID = r.RETAILER_ID
+      GROUP BY r.RETAILER_NAME
+      ORDER BY overall_roi DESC
+
+  - name: compliance_by_retailer
+    question: What is the average compliance score by retailer?
+    sql: |
+      SELECT
+        r.RETAILER_NAME,
+        COUNT(cs.PROMO_ID)                       AS total_promos,
+        ROUND(AVG(cs.OVERALL_COMPLIANCE_PCT), 1) AS avg_overall_compliance,
+        ROUND(AVG(cs.PRICE_ACCURACY_PCT), 1)     AS avg_price_accuracy,
+        ROUND(AVG(cs.DISPLAY_COMPLIANCE_PCT), 1) AS avg_display_compliance,
+        ROUND(AVG(cs.FEATURE_COMPLIANCE_PCT), 1) AS avg_feature_compliance,
+        COUNT_IF(cs.COMPLIANCE_STATUS = 'COMPLIANT')     AS compliant_count,
+        COUNT_IF(cs.COMPLIANCE_STATUS = 'NON-COMPLIANT') AS noncompliant_count
+      FROM CERES_TRADE_PROMO.TRADE_ANALYTICS.FACT_COMPLIANCE_SCORES cs
+      JOIN CERES_TRADE_PROMO.TRADE_ANALYTICS.FACT_TRADE_CALENDAR tc ON cs.PROMO_ID = tc.PROMO_ID
+      JOIN CERES_TRADE_PROMO.TRADE_ANALYTICS.DIM_RETAILER r ON tc.RETAILER_ID = r.RETAILER_ID
+      GROUP BY r.RETAILER_NAME
+      ORDER BY avg_overall_compliance DESC
+
+  - name: roi_by_promo_type
+    question: How does ROI compare across different promotion mechanic types?
+    sql: |
+      SELECT
+        tc.PROMO_TYPE,
+        COUNT(*)                                                                    AS total_promos,
+        ROUND(AVG(tc.DISCOUNT_PCT), 1)                                             AS avg_discount_pct,
+        ROUND(SUM(la.SPEND_IDR) / 1e6, 1)                                          AS spend_million_idr,
+        ROUND(SUM(la.INCREMENTAL_REVENUE_IDR) / 1e6, 1)                            AS revenue_million_idr,
+        ROUND(SUM(la.INCREMENTAL_REVENUE_IDR) / NULLIF(SUM(la.SPEND_IDR), 0), 2)  AS overall_roi,
+        ROUND(AVG(la.LIFT_PCT), 1)                                                  AS avg_lift_pct
+      FROM CERES_TRADE_PROMO.TRADE_ANALYTICS.FACT_TRADE_CALENDAR tc
+      JOIN CERES_TRADE_PROMO.TRADE_ANALYTICS.FACT_LIFT_ANALYSIS la ON tc.PROMO_ID = la.PROMO_ID
+      GROUP BY tc.PROMO_TYPE
+      ORDER BY overall_roi DESC
+
+  - name: top_ppgs_by_lift
+    question: Which product groups have the highest average volume lift?
+    sql: |
+      SELECT
+        p.PPG_NAME,
+        p.PACK_SIZE,
+        p.CATEGORY,
+        COUNT(tc.PROMO_ID)            AS total_promos,
+        ROUND(AVG(la.LIFT_PCT), 1)    AS avg_lift_pct,
+        ROUND(AVG(la.ROI), 2)         AS avg_roi
+      FROM CERES_TRADE_PROMO.TRADE_ANALYTICS.FACT_TRADE_CALENDAR tc
+      JOIN CERES_TRADE_PROMO.TRADE_ANALYTICS.FACT_LIFT_ANALYSIS la ON tc.PROMO_ID = la.PROMO_ID
+      JOIN CERES_TRADE_PROMO.TRADE_ANALYTICS.DIM_PPG p ON tc.PPG_ID = p.PPG_ID
+      GROUP BY p.PPG_NAME, p.PACK_SIZE, p.CATEGORY
+      ORDER BY avg_lift_pct DESC
+      LIMIT 10
+
+  - name: spend_vs_revenue_trend
+    question: How has total promotional spend compared to incremental revenue each month?
+    sql: |
+      SELECT
+        cal.YEAR,
+        cal.MONTH,
+        cal.QUARTER,
+        COUNT(tc.PROMO_ID)                                                          AS total_promos,
+        ROUND(SUM(la.SPEND_IDR) / 1e9, 2)                                          AS spend_billion_idr,
+        ROUND(SUM(la.INCREMENTAL_REVENUE_IDR) / 1e9, 2)                            AS revenue_billion_idr,
+        ROUND(SUM(la.INCREMENTAL_REVENUE_IDR) / NULLIF(SUM(la.SPEND_IDR), 0), 2)  AS roi
+      FROM CERES_TRADE_PROMO.TRADE_ANALYTICS.FACT_TRADE_CALENDAR tc
+      JOIN CERES_TRADE_PROMO.TRADE_ANALYTICS.FACT_LIFT_ANALYSIS la ON tc.PROMO_ID = la.PROMO_ID
+      JOIN CERES_TRADE_PROMO.TRADE_ANALYTICS.DIM_CALENDAR cal ON tc.WEEK_START = cal.WEEK_START
+      GROUP BY cal.YEAR, cal.MONTH, cal.QUARTER
+      ORDER BY cal.YEAR, cal.MONTH
+
+custom_instructions: |
+  - All monetary values are in Indonesian Rupiah (IDR). When presenting large amounts,
+    express in billions (miliar) when the value exceeds 1,000,000,000, or millions when above 1,000,000.
+  - ROI interpretation: below 0.5 = poor, 0.5–1.0 = below break-even, 1.0–2.0 = good, above 2.0 = strong.
+    A promotion is only "profitable" when ROI > 1.0.
+  - Promotion mechanic types from lowest to highest investment:
+    TPR (price only) < TPR+D (price + display) < TPR+F (price + feature) < TPR+D+F (price + display + feature).
+    TPR+D+F typically produces the highest lift and ROI but requires full retailer execution.
+  - Compliance status thresholds: COMPLIANT = overall score >= 85%, PARTIAL = 60–84%, NON-COMPLIANT < 60%.
+  - Product pricing is driven primarily by pack size, from Rp 3,500 (20g mini sachet)
+    up to Rp 198,000 (2kg family pack). Limited-edition variants (Tiramisu, Matcha,
+    Ramadan/Lebaran/Christmas) carry a modest premium over regular flavours at the same pack size.
+  - The dataset covers 10 Indonesian retailers: Indomaret, Alfamart, Carrefour Indonesia,
+    Hypermart, Giant, Superindo, Lotte Mart, AEON, Transmart, Ranch Market.
+  - Time dimension: Q1 2025 was below break-even (ROI ~0.17). Q2 2025 improved to profitable (ROI ~1.27).
+  - When asked about "best" or "worst" promotions, default to ranking by overall_roi
+    (portfolio ROI = total incremental revenue / total spend) unless the user specifies otherwise.
+  - FACT_TRADE_CALENDAR is the central fact table. Always join FACT_LIFT_ANALYSIS and
+    FACT_COMPLIANCE_SCORES via PROMO_ID. Join DIM_CALENDAR via WEEK_START = WEEK_START.
