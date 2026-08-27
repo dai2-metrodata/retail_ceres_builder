@@ -43,7 +43,7 @@ INSTRUCTIONS:
 
     const llmResult = await query<{ RESPONSE: string }>(
 
-      `SELECT SNOWFLAKE.CORTEX.COMPLETE('mistral-large2-2407', CONCAT(?, '\\n\\nUser question: ', ?)) AS RESPONSE`,
+      `SELECT SNOWFLAKE.CORTEX.COMPLETE('llama3.1-70b', CONCAT(?, '\\n\\nUser question: ', ?)) AS RESPONSE`,
 
       [systemPrompt, message]
     );
