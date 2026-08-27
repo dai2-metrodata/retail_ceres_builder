@@ -42,7 +42,7 @@ INSTRUCTIONS:
 4. Keep responses concise and actionable.`;
 
     const llmResult = await query<{ RESPONSE: string }>(
-      `SELECT SNOWFLAKE.CORTEX.COMPLETE('mistral-large2', CONCAT(?, '\\n\\nUser question: ', ?)) AS RESPONSE`,
+      `SELECT SNOWFLAKE.CORTEX.COMPLETE('llama3.1-70b', CONCAT(?, '\\n\\nUser question: ', ?)) AS RESPONSE`,
       [systemPrompt, message]
     );
 

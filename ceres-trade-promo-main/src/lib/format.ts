@@ -1,4 +1,5 @@
-export function formatIDR(val: number): string {
+export function formatIDR(val: number | null | undefined): string {
+  if (val == null) return "–";
   return new Intl.NumberFormat("id-ID", {
     style: "currency",
     currency: "IDR",
@@ -7,14 +8,16 @@ export function formatIDR(val: number): string {
   }).format(val);
 }
 
-export function formatNumber(val: number, decimals = 0): string {
+export function formatNumber(val: number | null | undefined, decimals = 0): string {
+  if (val == null) return "–";
   return new Intl.NumberFormat("id-ID", {
     minimumFractionDigits: decimals,
     maximumFractionDigits: decimals,
   }).format(val);
 }
 
-export function formatPercent(val: number, decimals = 1): string {
+export function formatPercent(val: number | null | undefined, decimals = 1): string {
+  if (val == null) return "–";
   return `${val.toFixed(decimals)}%`;
 }
 
