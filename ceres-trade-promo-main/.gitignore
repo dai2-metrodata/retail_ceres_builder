@@ -1,0 +1,4 @@
+# Folder dependensi (wajib diabaikan)
+node_modules/
+jspm_packages/
+web_modules/
