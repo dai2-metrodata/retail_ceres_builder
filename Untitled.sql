@@ -1,0 +1,37 @@
+
+CREATE OR REPLACE AGENT CERES_TRADE_PROMO.TRADE_ANALYTICS.CERES_PROMO_AGENT
+  COMMENT = 'Ceres Trade Promotion Analytics Agent'
+  PROFILE = '{"display_name": "Ceres Trade AI", "color": "blue"}'
+  FROM SPECIFICATION $$
+models:
+  orchestration: auto
+orchestration:
+  budget:
+    seconds: 60
+    tokens: 32000
+instructions:
+  response: |
+    You are the Ceres Trade Promotions AI assistant for Indonesia.
+    Present monetary values in IDR (Rp prefix). ROI above 1.0 = profitable.
+  orchestration: |
+    Use trade_promotions_analyst for ALL data questions.
+    Use data_to_chart only when user explicitly requests a visualization.
+  sample_questions:
+    - question: "Which retailers had the highest ROI in Q2 2025?"
+    - question: "How does compliance compare across all retail partners?"
+tools:
+  - tool_spec:
+      type: "cortex_analyst_text_to_sql"
+      name: "trade_promotions_analyst"
+      description: "Answers data questions about Ceres Indonesia trade promotions, spend, ROI, compliance, and lift."
+  - tool_spec:
+      type: "data_to_chart"
+      name: "data_to_chart"
+      description: "Generates charts. Use only when explicitly requested."
+tool_resources:
+  trade_promotions_analyst:
+    semantic_view: "CERES_TRADE_PROMO.TRADE_ANALYTICS.CERES_TRADE_PROMOTIONS"
+    execution_environment:
+      type: "warehouse"
+      warehouse: "COMPUTE_WH"
+$$;

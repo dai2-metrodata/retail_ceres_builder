@@ -1,0 +1,222 @@
+-- ============================================================
+-- SnowBolt Energy Indonesia — Data Extension to June 2026
+-- Adds W61–W78 (2026-03-02 through 2026-06-28) to DIM_CALENDAR
+-- and generates matching fact data for those weeks.
+-- INSERT ONLY — does not truncate existing tables.
+-- ============================================================
+
+USE DATABASE CERES_TRADE_PROMO;
+USE SCHEMA TRADE_ANALYTICS;
+USE WAREHOUSE COMPUTE_WH;
+
+-- ============================================================
+-- STEP 1: Extend DIM_CALENDAR (W61–W78)
+-- ============================================================
+INSERT INTO DIM_CALENDAR (WEEK_ID, WEEK_START, WEEK_END, YEAR, QUARTER, MONTH, PERIOD_NAME) VALUES
+  (61, '2026-03-02', '2026-03-08', 2026, 1, 3, 'W61'),
+  (62, '2026-03-09', '2026-03-15', 2026, 1, 3, 'W62'),
+  (63, '2026-03-16', '2026-03-22', 2026, 1, 3, 'W63'),
+  (64, '2026-03-23', '2026-03-29', 2026, 1, 3, 'W64'),
+  (65, '2026-03-30', '2026-04-05', 2026, 1, 3, 'W65'),
+  (66, '2026-04-06', '2026-04-12', 2026, 2, 4, 'W66'),
+  (67, '2026-04-13', '2026-04-19', 2026, 2, 4, 'W67'),
+  (68, '2026-04-20', '2026-04-26', 2026, 2, 4, 'W68'),
+  (69, '2026-04-27', '2026-05-03', 2026, 2, 4, 'W69'),
+  (70, '2026-05-04', '2026-05-10', 2026, 2, 5, 'W70'),
+  (71, '2026-05-11', '2026-05-17', 2026, 2, 5, 'W71'),
+  (72, '2026-05-18', '2026-05-24', 2026, 2, 5, 'W72'),
+  (73, '2026-05-25', '2026-05-31', 2026, 2, 5, 'W73'),
+  (74, '2026-06-01', '2026-06-07', 2026, 2, 6, 'W74'),
+  (75, '2026-06-08', '2026-06-14', 2026, 2, 6, 'W75'),
+  (76, '2026-06-15', '2026-06-21', 2026, 2, 6, 'W76'),
+  (77, '2026-06-22', '2026-06-28', 2026, 2, 6, 'W77'),
+  (78, '2026-06-29', '2026-07-05', 2026, 2, 6, 'W78');
+
+-- ============================================================
+-- STEP 2: New promotions in FACT_TRADE_CALENDAR (new weeks only)
+-- Same 10% hit-rate per retailer-PPG-week as original seed.
+-- ============================================================
+INSERT INTO FACT_TRADE_CALENDAR (
+  RETAILER_ID, PPG_ID, WEEK_START, WEEK_END,
+  DISCOUNT_IDR, DISCOUNT_PCT, PROMO_TYPE,
+  PLANNED_SPEND_IDR, PLANNED_VOLUME_CASES,
+  COVERAGE, PLANNED_HAS_DISPLAY, PLANNED_HAS_FEATURE, STATUS
+)
+WITH promo_slots AS (
+  SELECT
+    r.RETAILER_ID,
+    p.PPG_ID,
+    c.WEEK_START,
+    CASE WHEN UNIFORM(1, 10, RANDOM()) <= 3
+         THEN DATEADD('week', 1, c.WEEK_START)
+         ELSE c.WEEK_START
+    END AS WEEK_END,
+    p.REGULAR_PRICE_IDR,
+    r.COVERAGE_TYPE,
+    UNIFORM(10, 35, RANDOM()) AS DISC_PCT,
+    CASE UNIFORM(1, 20, RANDOM())
+      WHEN 1  THEN 'TPR+D+F'
+      WHEN 2  THEN 'TPR+D+F'
+      WHEN 3  THEN 'TPR+F'
+      WHEN 4  THEN 'TPR+F'
+      WHEN 5  THEN 'TPR+F'
+      WHEN 6  THEN 'TPR+F'
+      WHEN 7  THEN 'TPR+F'
+      WHEN 8  THEN 'TPR+D'
+      WHEN 9  THEN 'TPR+D'
+      WHEN 10 THEN 'TPR+D'
+      WHEN 11 THEN 'TPR+D'
+      WHEN 12 THEN 'TPR+D'
+      WHEN 13 THEN 'TPR+D'
+      WHEN 14 THEN 'TPR+D'
+      WHEN 15 THEN 'TPR+D'
+      ELSE 'TPR'
+    END AS PROMO_TYPE
+  FROM DIM_RETAILER r
+  CROSS JOIN DIM_PPG p
+  CROSS JOIN DIM_CALENDAR c
+  WHERE c.WEEK_ID BETWEEN 61 AND 78
+    AND UNIFORM(1, 100, RANDOM()) <= 10
+)
+SELECT
+  RETAILER_ID,
+  PPG_ID,
+  WEEK_START,
+  WEEK_END,
+  ROUND(REGULAR_PRICE_IDR * DISC_PCT / 100, 0)                             AS DISCOUNT_IDR,
+  DISC_PCT                                                                  AS DISCOUNT_PCT,
+  PROMO_TYPE,
+  ROUND(UNIFORM(1000000, 150000000, RANDOM()) * (DISC_PCT / 20.0), 0)      AS PLANNED_SPEND_IDR,
+  UNIFORM(200, 5000, RANDOM())                                              AS PLANNED_VOLUME_CASES,
+  COVERAGE_TYPE                                                             AS COVERAGE,
+  PROMO_TYPE IN ('TPR+D', 'TPR+D+F')                                       AS PLANNED_HAS_DISPLAY,
+  PROMO_TYPE IN ('TPR+F', 'TPR+D+F')                                       AS PLANNED_HAS_FEATURE,
+  CASE UNIFORM(1, 10, RANDOM())
+    WHEN 1 THEN 'PLANNED'
+    ELSE 'COMPLETED'
+  END AS STATUS
+FROM promo_slots;
+
+-- ============================================================
+-- STEP 3: Compliance scores for new promotions
+-- ============================================================
+INSERT INTO FACT_COMPLIANCE_SCORES (
+  PROMO_ID,
+  PRICE_ACCURACY_PCT,
+  DISPLAY_COMPLIANCE_PCT,
+  FEATURE_COMPLIANCE_PCT,
+  OVERALL_COMPLIANCE_PCT,
+  COMPLIANCE_STATUS
+)
+SELECT
+  tc.PROMO_ID,
+  ROUND(GREATEST(0, LEAST(100, 50 + UNIFORM(-50, 50, RANDOM()) + UNIFORM(0, 30, RANDOM()))), 1) AS PRICE_ACC,
+  CASE WHEN tc.PLANNED_HAS_DISPLAY
+       THEN ROUND(GREATEST(0, LEAST(100, UNIFORM(20, 100, RANDOM()))), 1)
+       ELSE 100.0
+  END AS DISPLAY_COMP,
+  CASE WHEN tc.PLANNED_HAS_FEATURE
+       THEN ROUND(GREATEST(0, LEAST(100, UNIFORM(15, 100, RANDOM()))), 1)
+       ELSE 100.0
+  END AS FEATURE_COMP,
+  0   AS OVERALL_PLACEHOLDER,
+  ''  AS STATUS_PLACEHOLDER
+FROM FACT_TRADE_CALENDAR tc
+WHERE tc.WEEK_START >= '2026-03-02'
+  AND tc.PROMO_ID NOT IN (SELECT PROMO_ID FROM FACT_COMPLIANCE_SCORES);
+
+UPDATE FACT_COMPLIANCE_SCORES
+SET OVERALL_COMPLIANCE_PCT = ROUND(
+      (PRICE_ACCURACY_PCT + DISPLAY_COMPLIANCE_PCT + FEATURE_COMPLIANCE_PCT) / 3, 1
+    ),
+    COMPLIANCE_STATUS = CASE
+      WHEN (PRICE_ACCURACY_PCT + DISPLAY_COMPLIANCE_PCT + FEATURE_COMPLIANCE_PCT) / 3 >= 85 THEN 'COMPLIANT'
+      WHEN (PRICE_ACCURACY_PCT + DISPLAY_COMPLIANCE_PCT + FEATURE_COMPLIANCE_PCT) / 3 >= 60 THEN 'PARTIAL'
+      ELSE 'NON-COMPLIANT'
+    END
+WHERE OVERALL_COMPLIANCE_PCT = 0;
+
+-- ============================================================
+-- STEP 4: Lift analysis for new promotions
+-- ============================================================
+INSERT INTO FACT_LIFT_ANALYSIS (
+  PROMO_ID,
+  BASE_VOLUME_CASES,
+  INCREMENTAL_VOLUME_CASES,
+  TOTAL_PROMOTED_VOLUME_CASES,
+  LIFT_PCT,
+  SPEND_IDR,
+  INCREMENTAL_REVENUE_IDR,
+  ROI
+)
+SELECT
+  tc.PROMO_ID,
+  UNIFORM(200, 1200, RANDOM()) AS BASE_VOL,
+  GREATEST(50, ROUND(UNIFORM(200, 1200, RANDOM()) *
+    (tc.DISCOUNT_PCT / 20.0) *
+    CASE tc.PROMO_TYPE
+      WHEN 'TPR'     THEN 0.5
+      WHEN 'TPR+D'   THEN 0.7
+      WHEN 'TPR+F'   THEN 0.65
+      WHEN 'TPR+D+F' THEN 0.9
+      ELSE 0.5
+    END
+  )) AS INCR_VOL,
+  0 AS TOTAL_PLACEHOLDER,
+  0 AS LIFT_PLACEHOLDER,
+  ROUND(tc.PLANNED_SPEND_IDR * UNIFORM(50, 150, RANDOM()) / 100, 0) AS SPEND,
+  0 AS REV_PLACEHOLDER,
+  0 AS ROI_PLACEHOLDER
+FROM FACT_TRADE_CALENDAR tc
+WHERE tc.WEEK_START >= '2026-03-02'
+  AND tc.PROMO_ID NOT IN (SELECT PROMO_ID FROM FACT_LIFT_ANALYSIS);
+
+UPDATE FACT_LIFT_ANALYSIS
+SET TOTAL_PROMOTED_VOLUME_CASES = BASE_VOLUME_CASES + INCREMENTAL_VOLUME_CASES,
+    LIFT_PCT = ROUND(INCREMENTAL_VOLUME_CASES * 100.0 / NULLIF(BASE_VOLUME_CASES, 0), 1),
+    INCREMENTAL_REVENUE_IDR = ROUND(INCREMENTAL_VOLUME_CASES * UNIFORM(5000, 50000, RANDOM()), 0),
+    ROI = ROUND(
+      (INCREMENTAL_VOLUME_CASES * UNIFORM(5000, 50000, RANDOM())) / NULLIF(SPEND_IDR, 0),
+      2
+    )
+WHERE TOTAL_PROMOTED_VOLUME_CASES = 0;
+
+-- ============================================================
+-- STEP 5: POS actuals for new weeks (W61–W78)
+-- Same ~48% hit-rate per retailer-PPG-week as original seed.
+-- ============================================================
+INSERT INTO FACT_POS_ACTUALS (
+  RETAILER_ID, PPG_ID, WEEK_ID,
+  ACTUAL_PRICE_IDR, ACTUAL_VOLUME_CASES, BASE_VOLUME_CASES,
+  IS_ON_FEATURE, IS_ON_DISPLAY, IS_PROMOTED
+)
+SELECT
+  r.RETAILER_ID,
+  p.PPG_ID,
+  c.WEEK_ID,
+  ROUND(p.REGULAR_PRICE_IDR * (1 - UNIFORM(0, 35, RANDOM()) / 100.0), 0) AS ACTUAL_PRICE,
+  UNIFORM(100, 900, RANDOM())                                              AS ACTUAL_VOL,
+  ROUND(UNIFORM(100, 900, RANDOM()) * UNIFORM(40, 80, RANDOM()) / 100.0)  AS BASE_VOL,
+  UNIFORM(1, 100, RANDOM()) <= 15                                          AS IS_ON_FEATURE,
+  UNIFORM(1, 100, RANDOM()) <= 20                                          AS IS_ON_DISPLAY,
+  UNIFORM(1, 100, RANDOM()) <= 40                                          AS IS_PROMOTED
+FROM DIM_RETAILER r
+CROSS JOIN DIM_PPG p
+CROSS JOIN DIM_CALENDAR c
+WHERE c.WEEK_ID BETWEEN 61 AND 78
+  AND UNIFORM(1, 100, RANDOM()) <= 48;
+
+-- ============================================================
+-- Verification
+-- ============================================================
+SELECT 'DIM_CALENDAR'           AS TABLE_NAME, COUNT(*) AS ROW_COUNT, MAX(WEEK_END) AS LATEST_DATE FROM DIM_CALENDAR
+UNION ALL
+SELECT 'FACT_TRADE_CALENDAR'    AS TABLE_NAME, COUNT(*), MAX(WEEK_START) FROM FACT_TRADE_CALENDAR
+UNION ALL
+SELECT 'FACT_COMPLIANCE_SCORES' AS TABLE_NAME, COUNT(*), NULL FROM FACT_COMPLIANCE_SCORES
+UNION ALL
+SELECT 'FACT_LIFT_ANALYSIS'     AS TABLE_NAME, COUNT(*), NULL FROM FACT_LIFT_ANALYSIS
+UNION ALL
+SELECT 'FACT_POS_ACTUALS'       AS TABLE_NAME, COUNT(*), MAX(c.WEEK_END)
+  FROM FACT_POS_ACTUALS pa
+  JOIN DIM_CALENDAR c ON pa.WEEK_ID = c.WEEK_ID;
