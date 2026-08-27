@@ -25,12 +25,14 @@ export async function POST(request: Request) {
     const userMessage = message + contextHint;
     const requestBody = {
       messages: [{ role: "user", content: [{ type: "text", text: userMessage }] }],
-      ...(threadId ? { thread_id: threadId } : {}),
+      ...(threadId ? { thread_id: threadId, parent_message_id: 0 } : {}),
     };
-    const agentResult = await query<{ RESPONSE: string }>(
-      `SELECT SNOWFLAKE.CORTEX.DATA_AGENT_RUN('${AGENT_FQN}', PARSE_JSON(?))::STRING AS RESPONSE`,
-      [JSON.stringify(requestBody)]
-    );
+
+    // DATA_AGENT_RUN requires the second argument to be a constant string literal.
+    // We use $$ dollar-quoting and escape any $$ in the JSON payload.
+    const requestJson = JSON.stringify(requestBody).replace(/\$\$/g, "\\$\\$");
+    const sql = `SELECT SNOWFLAKE.CORTEX.DATA_AGENT_RUN('${AGENT_FQN}', $$${requestJson}$$)::STRING AS RESPONSE`;
+    const agentResult = await query<{ RESPONSE: string }>(sql);
 
     const rawResponse = agentResult[0]?.RESPONSE;
     if (!rawResponse) {
@@ -40,37 +42,26 @@ export async function POST(request: Request) {
     const parsed = JSON.parse(rawResponse);
     const responseThreadId = parsed.thread_id || threadId;
     let textContent = "";
-    let sqlResults: Record<string, unknown>[] | null = null;
+    let tableData: string[][] | null = null;
+    let tableCols: string[] | null = null;
 
-    if (parsed.messages && Array.isArray(parsed.messages)) {
-      for (const msg of parsed.messages) {
-        if (msg.role === "assistant" && msg.content) {
-          for (const block of msg.content) {
-            if (block.type === "text") {
-              textContent += block.text + "\n";
-            } else if (block.type === "tool_results") {
-              for (const tool of block.tools || []) {
-                if (tool.results && Array.isArray(tool.results) && tool.results.length > 0) {
-                  sqlResults = tool.results.slice(0, 20);
-                }
-              }
-            }
-          }
-        }
+    // Response is a single message object with role/content at top level
+    const content = parsed.content || (parsed.messages?.[0]?.content) || [];
+    for (const block of content) {
+      if (block.type === "text") {
+        textContent += block.text + "\n";
+      } else if (block.type === "table" && block.table?.result_set) {
+        tableData = block.table.result_set.data;
+        tableCols = block.table.result_set.resultSetMetaData?.rowType?.map((r: { name: string }) => r.name);
       }
     }
 
     let formattedResponse = textContent.trim();
-    if (sqlResults && sqlResults.length > 0) {
-      const cols = Object.keys(sqlResults[0]);
-      let table = "\n\n" + cols.join(" | ") + "\n" + cols.map(() => "---").join(" | ") + "\n";
-      sqlResults.forEach((row) => {
-        table += cols.map((c) => {
-          const v = row[c];
-          if (v === null || v === undefined) return "-";
-          if (typeof v === "number") return v % 1 === 0 ? v.toLocaleString() : Number(v).toFixed(2);
-          return String(v);
-        }).join(" | ") + "\n";
+
+    if (tableData && tableCols && tableData.length > 0) {
+      let table = "\n\n" + tableCols.join(" | ") + "\n" + tableCols.map(() => "---").join(" | ") + "\n";
+      tableData.slice(0, 20).forEach((row) => {
+        table += row.map((v) => v ?? "-").join(" | ") + "\n";
       });
       formattedResponse += table;
     }
