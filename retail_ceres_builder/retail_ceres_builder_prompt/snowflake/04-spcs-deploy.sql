@@ -44,7 +44,7 @@ CREATE SERVICE TRADE_PROMO_APP
 spec:
   containers:
     - name: ceres-trade-promo
-      image: /CERES_TRADE_PROMO/TRADE_ANALYTICS/IMAGE_REPO/ceres-trade-promo:latest
+      image: /CERES_TRADE_PROMO/TRADE_ANALYTICS/IMAGE_REPO/retail_ceres:latest
       env:
         SNOWFLAKE_WAREHOUSE: COMPUTE_WH
         SNOWFLAKE_DATABASE: CERES_TRADE_PROMO
