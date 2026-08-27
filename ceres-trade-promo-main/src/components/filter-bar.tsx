@@ -11,7 +11,7 @@ interface FilterOptions {
 
 interface FilterBarProps {
   filters: { retailer: string; ppg: string; quarter: string; promoType: string };
-  onFilterChange: (key: string, value: string) => void;
+  onFilterChange: (key: "retailer" | "ppg" | "quarter" | "promoType", value: string) => void;
   onReset: () => void;
 }
 
