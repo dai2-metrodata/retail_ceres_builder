@@ -19,6 +19,7 @@ SHOW IMAGE REPOSITORIES LIKE 'IMAGE_REPO';
 --   <account>.registry.snowflakecomputing.com/ceres_trade_promo/trade_analytics/image_repo
 -- docker login "repository_url" at local
 --docker login nynkybm-ij81701.registry.snowflakecomputing.com -u RINNOBAGUS
+-- ensure your docker desktop service is active before build image
 -- docker build -t "repository_url" at local
 --docker build -t nynkybm-ij81701.registry.snowflakecomputing.com/ceres_trade_promo/trade_analytics/image_repo/retail_ceres:latest .
 -- docker push "repository_url" at local
