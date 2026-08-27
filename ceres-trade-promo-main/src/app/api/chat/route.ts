@@ -42,7 +42,11 @@ INSTRUCTIONS:
 4. Keep responses concise and actionable.`;
 
     const llmResult = await query<{ RESPONSE: string }>(
+<<<<<<< local
+      `SELECT SNOWFLAKE.CORTEX.COMPLETE('mistral-large2-2407', CONCAT(?, '\\n\\nUser question: ', ?)) AS RESPONSE`,
+=======
       `SELECT SNOWFLAKE.CORTEX.COMPLETE('llama3.1-70b', CONCAT(?, '\\n\\nUser question: ', ?)) AS RESPONSE`,
+>>>>>>> remote
       [systemPrompt, message]
     );
 
