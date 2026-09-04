@@ -28,14 +28,16 @@ export default function LiftsPage() {
     setLoading(true);
     const params = new URLSearchParams();
     if (filters.retailer) params.set("retailer", filters.retailer);
+    if (filters.ppg) params.set("ppg", filters.ppg);
     if (filters.quarter) params.set("quarter", filters.quarter);
+    if (filters.promoType) params.set("promoType", filters.promoType);
 
     fetch(`/api/lifts?${params}`)
       .then((r) => r.json())
       .then(setData)
       .catch(console.error)
       .finally(() => setLoading(false));
-  }, [filters.retailer, filters.quarter]);
+  }, [filters.retailer, filters.ppg, filters.quarter, filters.promoType]);
 
   const byRetailer = data.reduce((acc, row) => {
     if (!acc[row.RETAILER_NAME]) acc[row.RETAILER_NAME] = { name: row.RETAILER_NAME, spend: 0, revenue: 0 };

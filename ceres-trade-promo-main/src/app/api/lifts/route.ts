@@ -5,7 +5,9 @@ export async function GET(request: NextRequest) {
   try {
     const params = request.nextUrl.searchParams;
     const retailer = params.get("retailer");
+    const ppg = params.get("ppg");
     const quarter = params.get("quarter");
+    const promoType = params.get("promoType");
 
     let sql = `
       SELECT r.RETAILER_NAME, tc.PROMO_TYPE,
@@ -24,11 +26,13 @@ export async function GET(request: NextRequest) {
     const binds: (string | number)[] = [];
 
     if (retailer) { sql += ` AND tc.RETAILER_ID = ?`; binds.push(Number(retailer)); }
+    if (ppg) { sql += ` AND tc.PPG_ID = ?`; binds.push(Number(ppg)); }
     if (quarter) {
       const [year, q] = quarter.split(" Q");
       sql += ` AND cal.YEAR = ? AND cal.QUARTER = ?`;
       binds.push(Number(year), Number(q));
     }
+    if (promoType) { sql += ` AND tc.PROMO_TYPE = ?`; binds.push(promoType); }
 
     sql += ` GROUP BY r.RETAILER_NAME, tc.PROMO_TYPE ORDER BY PORTFOLIO_ROI DESC`;
 

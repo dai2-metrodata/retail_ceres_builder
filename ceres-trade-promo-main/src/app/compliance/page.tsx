@@ -31,14 +31,16 @@ export default function CompliancePage() {
     setLoading(true);
     const params = new URLSearchParams();
     if (filters.retailer) params.set("retailer", filters.retailer);
+    if (filters.ppg) params.set("ppg", filters.ppg);
     if (filters.quarter) params.set("quarter", filters.quarter);
+    if (filters.promoType) params.set("promoType", filters.promoType);
 
     fetch(`/api/compliance?${params}`)
       .then((r) => r.json())
       .then(setData)
       .catch(console.error)
       .finally(() => setLoading(false));
-  }, [filters.retailer, filters.quarter]);
+  }, [filters.retailer, filters.ppg, filters.quarter, filters.promoType]);
 
   return (
     <div className="space-y-6">
