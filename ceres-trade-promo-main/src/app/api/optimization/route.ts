@@ -7,7 +7,7 @@ export async function GET() {
       SELECT tc.PROMO_TYPE,
              ROUND(AVG(tc.DISCOUNT_PCT), 1) AS AVG_DISCOUNT,
              ROUND(AVG(la.LIFT_PCT), 1) AS AVG_LIFT,
-             ROUND(AVG(la.ROI), 2) AS AVG_ROI,
+             ROUND(AVG(la.ROI), 2) * 100 AS AVG_ROI,
              COUNT(*) AS PROMO_COUNT,
              ROUND(SUM(la.SPEND_IDR) / 1e9, 2) AS TOTAL_SPEND_B,
              ROUND(SUM(la.INCREMENTAL_REVENUE_IDR) / 1e9, 2) AS TOTAL_REVENUE_B

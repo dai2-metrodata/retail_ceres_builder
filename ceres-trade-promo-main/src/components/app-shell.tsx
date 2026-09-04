@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
+import Image from 'next/image';
 
 const navItems = [
   { href: "/", label: "Promotional Calendar", num: 1 },
@@ -20,8 +21,14 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       <header className="sticky top-0 z-50 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
         <div className="flex h-14 items-center px-6">
           <div className="flex items-center gap-3 mr-8">
-            <div className="w-8 h-8 rounded bg-blue-600 flex items-center justify-center text-white font-bold text-sm">
-              C
+            <div className="flex items-center gap-3">
+              <Image 
+                src="/logo-ceres.png" 
+                alt="Ceres Logo" 
+                width={36} 
+                height={36} 
+                className="object-contain" 
+              />
             </div>
             <div>
               <h1 className="text-sm font-semibold leading-none">Ceres Trade Promotions</h1>

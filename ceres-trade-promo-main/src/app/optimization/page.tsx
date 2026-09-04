@@ -70,7 +70,7 @@ export default function OptimizationPage() {
                   <YAxis />
                   <Tooltip />
                   <Legend />
-                  <Bar dataKey="AVG_ROI" name="Avg ROI" fill={CHART_COLORS[0]} />
+                  <Bar dataKey="AVG_ROI" name="Avg ROI %" fill={CHART_COLORS[0]} />
                   <Bar dataKey="AVG_LIFT" name="Avg Lift %" fill={CHART_COLORS[2]} />
                 </BarChart>
               </ResponsiveContainer>
@@ -139,7 +139,7 @@ export default function OptimizationPage() {
                     <td className="px-4 py-2 text-right">{row.PROMO_COUNT}</td>
                     <td className="px-4 py-2 text-right">{row.AVG_DISCOUNT}%</td>
                     <td className="px-4 py-2 text-right">{row.AVG_LIFT}%</td>
-                    <td className="px-4 py-2 text-right font-semibold">{row.AVG_ROI}x</td>
+                    <td className="px-4 py-2 text-right font-semibold">{row.AVG_ROI}%</td>
                     <td className="px-4 py-2 text-right">Rp {row.TOTAL_SPEND_B}B</td>
                     <td className="px-4 py-2 text-right">Rp {row.TOTAL_REVENUE_B}B</td>
                   </tr>
