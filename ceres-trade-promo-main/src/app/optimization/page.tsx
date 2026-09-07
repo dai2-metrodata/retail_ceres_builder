@@ -129,7 +129,7 @@ export default function OptimizationPage() {
                   <th className="px-4 py-3 text-right font-medium">Avg Lift</th>
                   <th className="px-4 py-3 text-right font-medium">Avg ROI</th>
                   <th className="px-4 py-3 text-right font-medium">Total Spend (B)</th>
-                  <th className="px-4 py-3 text-right font-medium">Total Net Profit (B)</th>
+                  <th className="px-4 py-3 text-right font-medium">Total Incremental Revenue (B)</th>
                 </tr>
               </thead>
               <tbody>
