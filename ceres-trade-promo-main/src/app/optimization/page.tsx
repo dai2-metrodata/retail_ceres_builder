@@ -109,7 +109,7 @@ export default function OptimizationPage() {
                 ))}
                 <div className="pt-2 border-t mt-2">
                   <span className="text-sm font-medium">Expected Portfolio ROI: </span>
-                  <span className="text-lg font-bold text-green-600">{simResult.expectedROI/100}x</span>
+                  <span className="text-lg font-bold text-green-600">{(simResult.expectedROI/100).toFixed(2)}x</span>
                 </div>
                 <div>
                   <span className="text-sm font-medium">Expected Incremental Revenue: </span>
