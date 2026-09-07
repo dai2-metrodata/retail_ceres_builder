@@ -85,7 +85,7 @@ export default function LiftsPage() {
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis dataKey="AVG_LIFT" name="Avg Lift %" type="number" />
                 <YAxis dataKey="PORTFOLIO_ROI" name="ROI" type="number" />
-                <ZAxis dataKey="PROMO_COUNT" range={[50, 400]} name="Promos" />
+                <ZAxis dataKey="PROMO_TYPE" range={[50, 400]} name="Promo Type" />
                 <Tooltip />
                 <Scatter data={data} fill={CHART_COLORS[0]} />
               </ScatterChart>

@@ -1,0 +1,9 @@
+ceres-trade-promo-main/run-dev.sh
+node_modules/
+jspm_packages/
+web_modules/
+ceres-trade-promo-main/rsa_key.p8
+ceres-trade-promo-main/rsa_key.pub
+ceres-trade-promo-main/run-dev.sh
+ceres-trade-promo-main/.next/
+ceres-trade-promo-main/run-dev.sh

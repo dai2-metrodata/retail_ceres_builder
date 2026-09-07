@@ -21,19 +21,28 @@ export function formatPercent(val: number | null | undefined, decimals = 1): str
   return `${val.toFixed(decimals)}%`;
 }
 
+// Kept in sync with --color-chart-1..5 in globals.css.
 export const CHART_COLORS = [
-  "oklch(0.62 0.16 245)",
-  "oklch(0.50 0.14 260)",
-  "oklch(0.75 0.15 85)",
-  "oklch(0.65 0.12 180)",
-  "oklch(0.7 0.02 260)",
+  "oklch(0.6 0.1 165)",   // chart-1 — sage green
+  "oklch(0.45 0.05 250)", // chart-2 — slate blue
+  "oklch(0.7 0.13 70)",   // chart-3 — caramel gold
+  "oklch(0.55 0.14 30)",  // chart-4 — terracotta
+  "oklch(0.6 0.02 60)",   // chart-5 — neutral taupe
 ];
 
+// FIX: each entry now also sets an explicit, contrasting text color.
+// The Badge component's `variant="secondary"` applies a fixed dark
+// text color (--color-secondary-foreground) regardless of background,
+// so on darker chart colors (chart-2 slate blue, chart-4 terracotta,
+// chart-1 sage) the text became nearly invisible. `!text-*` (important)
+// guarantees this overrides the variant's default, regardless of
+// Tailwind's internal class ordering. chart-3 (caramel gold) is light
+// enough that the existing dark text already reads fine.
 export const promoTypeColors: Record<string, string> = {
-  TPR: "bg-chart-2",
-  "TPR+D": "bg-chart-4",
-  "TPR+F": "bg-chart-3",
-  "TPR+D+F": "bg-chart-1",
+  TPR: "bg-chart-2 !text-white",
+  "TPR+D": "bg-chart-4 !text-white",
+  "TPR+F": "bg-chart-3 !text-foreground",
+  "TPR+D+F": "bg-chart-1 !text-white",
 };
 
 export const promoTypeBorderColors: Record<string, string> = {
@@ -57,6 +66,9 @@ export const promoTypeColorMap: Record<string, string> = {
   "TPR+D+F": CHART_COLORS[0],
 };
 
+// Status semantics (compliant/partial/non-compliant) intentionally kept as
+// green/orange/red — a semantic traffic-light meaning that should stay
+// legible regardless of brand palette.
 export const statusBadgeClass: Record<string, string> = {
   COMPLIANT: "bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-200",
   PARTIAL: "bg-orange-100 text-orange-800 dark:bg-orange-900/40 dark:text-orange-200",
