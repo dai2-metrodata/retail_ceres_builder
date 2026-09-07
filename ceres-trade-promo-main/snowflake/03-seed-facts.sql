@@ -175,6 +175,14 @@ SET TOTAL_PROMOTED_VOLUME_CASES = BASE_VOLUME_CASES + INCREMENTAL_VOLUME_CASES,
       2
     );
 
+UPDATE FACT_LIFT_ANALYSIS
+set ROI = ROUND(
+      (INCREMENTAL_REVENUE_IDR) / NULLIF(SPEND_IDR, 0),
+      2
+    );
+
+--select * from  FACT_LIFT_ANALYSIS 
+
 -- ============================================================
 -- FACT_POS_ACTUALS  (~10 records per retailer-PPG combo)
 -- Point-of-sale weekly data across all weeks.
@@ -208,6 +216,9 @@ CROSS JOIN DIM_CALENDAR c
 -- ~29 records per retailer-PPG across 60 weeks (~48% hit rate)
 WHERE UNIFORM(1, 100, RANDOM()) <= 48;
 
+UPDATE FACT_POS_ACTUALS
+SET BASE_VOLUME_CASES=ROUND(ACTUAL_VOLUME_CASES * UNIFORM(40, 80, RANDOM()) / 100.0)
+
 -- ============================================================
 -- FACT_OPTIMIZATION_SCENARIOS  (starts empty — populated via app)
 -- ============================================================
@@ -216,7 +227,8 @@ TRUNCATE TABLE IF EXISTS FACT_OPTIMIZATION_SCENARIOS;
 -- ============================================================
 -- Verification queries
 -- ============================================================
-SELECT 'FACT_TRADE_CALENDAR'    AS TABLE_NAME, COUNT(*) AS ROW_COUNT FROM FACT_TRADE_CALENDAR
+/*
+SELECT 'FACT_TRADE_CALENDAR'    AS TABLE_NAME, COUNT(*),max(week_end) max_week_end FROM FACT_TRADE_CALENDAR
 UNION ALL
 SELECT 'FACT_COMPLIANCE_SCORES' AS TABLE_NAME, COUNT(*) AS ROW_COUNT FROM FACT_COMPLIANCE_SCORES
 UNION ALL
@@ -225,5 +237,5 @@ UNION ALL
 SELECT 'FACT_POS_ACTUALS'       AS TABLE_NAME, COUNT(*) AS ROW_COUNT FROM FACT_POS_ACTUALS
 UNION ALL
 SELECT 'FACT_OPT_SCENARIOS'     AS TABLE_NAME, COUNT(*) AS ROW_COUNT FROM FACT_OPTIMIZATION_SCENARIOS;
-
+*/
 -- Done. Run 04-spcs-deploy.sql to deploy the app container.

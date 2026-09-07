@@ -111,6 +111,10 @@ export default function OptimizationPage() {
                   <span className="text-sm font-medium">Expected Portfolio ROI: </span>
                   <span className="text-lg font-bold text-green-600">{simResult.expectedROI}x</span>
                 </div>
+                <div>
+                  <span className="text-sm font-medium">Expected Incremental Revenue: </span>
+                  <span className="text-lg font-bold text-green-600">Rp {(simResult.expectedROI * budget).toFixed(1)}B</span>
+                </div>
               </div>
             )}
           </CardContent>
