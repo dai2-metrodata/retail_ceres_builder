@@ -4,30 +4,45 @@
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
-  --color-background: oklch(1 0 0);
-  --color-foreground: oklch(0.145 0 0);
-  --color-card: oklch(1 0 0);
-  --color-card-foreground: oklch(0.145 0 0);
-  --color-popover: oklch(1 0 0);
-  --color-popover-foreground: oklch(0.145 0 0);
-  --color-primary: oklch(0.205 0.042 265.755);
-  --color-primary-foreground: oklch(0.985 0 0);
-  --color-secondary: oklch(0.97 0 0);
-  --color-secondary-foreground: oklch(0.205 0.042 265.755);
-  --color-muted: oklch(0.97 0 0);
-  --color-muted-foreground: oklch(0.556 0.014 285.938);
-  --color-accent: oklch(0.97 0 0);
-  --color-accent-foreground: oklch(0.205 0.042 265.755);
-  --color-destructive: oklch(0.577 0.245 27.325);
+  /* --- Base surfaces (warm off-white instead of pure white) --- */
+  --color-background: oklch(0.98 0.006 75);
+  --color-foreground: oklch(0.24 0.03 45);
+
+  --color-card: oklch(0.995 0.003 75);
+  --color-card-foreground: oklch(0.24 0.03 45);
+
+  --color-popover: oklch(0.995 0.003 75);
+  --color-popover-foreground: oklch(0.24 0.03 45);
+
+  /* --- Primary: deep cocoa (was navy) --- */
+  --color-primary: oklch(0.32 0.06 45);
+  --color-primary-foreground: oklch(0.98 0.01 80);
+
+  /* --- Secondary: soft caramel tint --- */
+  --color-secondary: oklch(0.93 0.035 75);
+  --color-secondary-foreground: oklch(0.32 0.06 45);
+
+  --color-muted: oklch(0.95 0.012 70);
+  --color-muted-foreground: oklch(0.5 0.03 50);
+
+  /* --- Accent: caramel (used for highlights, active states) --- */
+  --color-accent: oklch(0.78 0.11 70);
+  --color-accent-foreground: oklch(0.28 0.05 45);
+
+  --color-destructive: oklch(0.577 0.19 27);
   --color-destructive-foreground: oklch(0.985 0 0);
-  --color-border: oklch(0.922 0 0);
-  --color-input: oklch(0.922 0 0);
-  --color-ring: oklch(0.708 0.028 285.823);
-  --color-chart-1: oklch(0.62 0.16 245);
-  --color-chart-2: oklch(0.50 0.14 260);
-  --color-chart-3: oklch(0.75 0.15 85);
-  --color-chart-4: oklch(0.65 0.12 180);
-  --color-chart-5: oklch(0.7 0.02 260);
+
+  --color-border: oklch(0.9 0.015 65);
+  --color-input: oklch(0.9 0.015 65);
+  --color-ring: oklch(0.78 0.11 70);
+
+  /* --- Chart / badge palette --- */
+  --color-chart-1: oklch(0.6 0.1 165);   /* sage green   - TPR+D+F */
+  --color-chart-2: oklch(0.45 0.05 250); /* slate blue   - TPR   */
+  --color-chart-3: oklch(0.7 0.13 70);   /* caramel gold - TPR+F */
+  --color-chart-4: oklch(0.55 0.14 30);  /* terracotta   - TPR+D */
+  --color-chart-5: oklch(0.6 0.02 60);   /* neutral taupe */
+
   --radius: 0.625rem;
 }
 
@@ -38,5 +53,45 @@
   body {
     @apply bg-background text-foreground;
     font-family: system-ui, -apple-system, sans-serif;
+  }
+}
+
+/* ------------------------------------------------------------------ */
+/* Reusable table styling — add className="promo-table" to any <table> */
+/* in any menu (Compliance, Lifts, Optimization, Upload) to match this */
+/* look without rewriting the markup.                                  */
+/* ------------------------------------------------------------------ */
+@layer components {
+  .promo-table thead tr {
+    @apply bg-muted/70;
+  }
+  .promo-table thead th {
+    @apply text-xs font-semibold text-muted-foreground tracking-normal;
+  }
+  .promo-table tbody tr:nth-child(even) {
+    background-color: color-mix(in oklch, var(--color-muted) 45%, transparent);
+  }
+  .promo-table tbody tr:hover {
+    background-color: color-mix(in oklch, var(--color-accent) 22%, transparent);
+  }
+  .promo-table td,
+  .promo-table th {
+    @apply border-border;
+  }
+  .promo-table td.tabular {
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* KPI card accent stripe (left border) */
+  .kpi-card {
+    position: relative;
+    overflow: hidden;
+  }
+  .kpi-card::before {
+    content: "";
+    position: absolute;
+    inset: 0 auto 0 0;
+    width: 3px;
+    background: var(--color-accent);
   }
 }
