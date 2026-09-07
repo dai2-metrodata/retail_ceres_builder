@@ -105,7 +105,7 @@ export default function LiftsPage() {
                   <th className="px-4 py-3 text-right font-medium">Avg Lift</th>
                   <th className="px-4 py-3 text-right font-medium">Portfolio ROI</th>
                   <th className="px-4 py-3 text-right font-medium">Spend (M)</th>
-                  <th className="px-4 py-3 text-right font-medium">Revenue (M)</th>
+                  <th className="px-4 py-3 text-right font-medium">Net Profit (M)</th>
                   <th className="px-4 py-3 text-right font-medium">Promos</th>
                 </tr>
               </thead>

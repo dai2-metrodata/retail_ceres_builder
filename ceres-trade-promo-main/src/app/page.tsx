@@ -96,7 +96,7 @@ export default function PromotionalCalendar() {
                   <th className="px-4 py-3 text-left font-medium">Type</th>
                   <th className="px-4 py-3 text-right font-medium">Discount</th>
                   <th className="px-4 py-3 text-right font-medium">Planned Spend</th>
-                  <th className="px-4 py-3 text-right font-medium">Volume (cases)</th>
+                  <th className="px-4 py-3 text-right font-medium">Planned Volume (cases)</th>
                 </tr>
               </thead>
               <tbody>
