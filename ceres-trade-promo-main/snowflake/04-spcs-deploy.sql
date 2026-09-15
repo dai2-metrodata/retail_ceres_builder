@@ -17,6 +17,14 @@ CREATE IMAGE REPOSITORY IF NOT EXISTS IMAGE_REPO;
 SHOW IMAGE REPOSITORIES LIKE 'IMAGE_REPO';
 -- Copy the "repository_url" value from the output, e.g.:
 --   <account>.registry.snowflakecomputing.com/ceres_trade_promo/trade_analytics/image_repo
+-- docker login "repository_url" at local
+--docker login nynkybm-ij81701.registry.snowflakecomputing.com -u RINNOBAGUS
+-- ensure your docker desktop service is active before build image
+-- docker build -t "repository_url" at local
+--docker build -t nynkybm-ij81701.registry.snowflakecomputing.com/ceres_trade_promo/trade_analytics/image_repo/retail_ceres:latest .
+-- docker push "repository_url" at local
+--docker push nynkybm-ij81701.registry.snowflakecomputing.com/ceres_trade_promo/trade_analytics/image_repo/retail_ceres:latest
+
 
 -- ============================================================
 -- 2. Compute Pool
@@ -44,7 +52,7 @@ CREATE SERVICE TRADE_PROMO_APP
 spec:
   containers:
     - name: ceres-trade-promo
-      image: /CERES_TRADE_PROMO/TRADE_ANALYTICS/IMAGE_REPO/ceres-trade-promo:latest
+      image: /CERES_TRADE_PROMO/TRADE_ANALYTICS/IMAGE_REPO/retail_ceres:latest
       env:
         SNOWFLAKE_WAREHOUSE: COMPUTE_WH
         SNOWFLAKE_DATABASE: CERES_TRADE_PROMO
