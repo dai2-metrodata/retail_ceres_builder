@@ -12,6 +12,8 @@ interface LiftRow {
   RETAILER_NAME: string;
   PROMO_TYPE: string;
   AVG_LIFT: number;
+  BASE_VOLUME_CASES: number;
+  INCREMENTAL_VOLUME_CASES: number;
   AVG_ROI: number;
   SPEND_M: number;
   REVENUE_M: number;
@@ -103,6 +105,8 @@ export default function LiftsPage() {
                   <th className="px-4 py-3 text-left font-medium">Retailer</th>
                   <th className="px-4 py-3 text-left font-medium">Promo Type</th>
                   <th className="px-4 py-3 text-right font-medium">Avg Lift</th>
+                  <th className="px-4 py-3 text-right font-medium">Base Vol Cases</th>
+                  <th className="px-4 py-3 text-right font-medium">Incremental Vol Cases</th>
                   <th className="px-4 py-3 text-right font-medium">Portfolio ROI</th>
                   <th className="px-4 py-3 text-right font-medium">Spend (M)</th>
                   <th className="px-4 py-3 text-right font-medium">Incremental Revenue (M)</th>
@@ -118,6 +122,8 @@ export default function LiftsPage() {
                       <td className="px-4 py-2">{row.RETAILER_NAME}</td>
                       <td className="px-4 py-2">{row.PROMO_TYPE}</td>
                       <td className="px-4 py-2 text-right">{formatPercent(row.AVG_LIFT)}</td>
+                      <td className="px-4 py-2 text-right">{formatPercent(row.BASE_VOLUME_CASES)}</td>
+                      <td className="px-4 py-2 text-right">{formatPercent(row.INCREMENTAL_VOLUME_CASES)}</td>
                       <td className="px-4 py-2 text-right font-semibold">{row.PORTFOLIO_ROI?.toFixed(2)}x</td>
                       <td className="px-4 py-2 text-right">Rp {row.SPEND_M?.toFixed(1)}M</td>
                       <td className="px-4 py-2 text-right">Rp {row.REVENUE_M?.toFixed(1)}M</td>

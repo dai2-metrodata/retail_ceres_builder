@@ -12,6 +12,8 @@ export async function GET(request: NextRequest) {
     let sql = `
       SELECT r.RETAILER_NAME, tc.PROMO_TYPE,
              ROUND(AVG(la.LIFT_PCT), 1) AS AVG_LIFT,
+             ROUND(SUM(la.BASE_VOLUME_CASES), 1) AS BASE_VOLUME_CASES,
+             ROUND(SUM(la.INCREMENTAL_VOLUME_CASES), 1) AS INCREMENTAL_VOLUME_CASES,
              ROUND(AVG(la.ROI), 2) AS AVG_ROI,
              ROUND(SUM(la.SPEND_IDR) / 1e6, 1) AS SPEND_M,
              ROUND(SUM(la.INCREMENTAL_REVENUE_IDR) / 1e6, 1) AS REVENUE_M,
