@@ -73,6 +73,31 @@ $$
   MIN_INSTANCES = 1
   MAX_INSTANCES = 1;
 
+
+ALTER SERVICE TRADE_PROMO_APP
+from SPECIFICATION $$
+spec:
+  containers:
+    - name: ceres-trade-promo
+      image: /CERES_TRADE_PROMO/TRADE_ANALYTICS/IMAGE_REPO/retail_ceres:20260915
+      env:
+        SNOWFLAKE_WAREHOUSE: COMPUTE_WH
+        SNOWFLAKE_DATABASE: CERES_TRADE_PROMO
+        SNOWFLAKE_SCHEMA: TRADE_ANALYTICS
+      resources:
+        requests:
+          cpu: 0.5
+          memory: 1Gi
+        limits:
+          cpu: 2
+          memory: 4Gi
+  endpoints:
+    - name: app
+      port: 8000
+      public: true
+$$
+;
+
 -- ============================================================
 -- 4. Verify
 -- ============================================================
