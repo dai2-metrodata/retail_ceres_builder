@@ -16,7 +16,6 @@ import {
   Line,
 } from "recharts";
 import { CHART_COLORS } from "@/lib/format";
-
 interface ChatTable {
   columns: string[];
   rows: (string | null)[][];
@@ -73,7 +72,8 @@ function DataTableView({ table }: { table: ChatTable }) {
 
 function ChartView({ chart }: { chart: ChatChart }) {
   const ChartComponent = chart.type === "line" ? LineChart : BarChart;
-  const DataComponent = chart.type === "line" ? Line : Bar;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const DataComponent = (chart.type === "line" ? Line : Bar) as any;
 
   return (
     <div className="mt-2">
